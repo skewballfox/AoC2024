@@ -1,14 +1,12 @@
 use std::collections::{HashMap, HashSet};
 
-use aoc_runner_derive::{aoc, aoc_generator};
+use aoc_runner_derive::aoc;
 
+#[inline(always)]
 pub fn get_number(input: &str) -> (u32, &str) {
     for i in 0..input.len() {
         if !(input.as_bytes()[i] as char).is_numeric() {
-            return (
-                input[0..i].parse::<u32>().unwrap(),
-                input[i..].trim_start(),
-            );
+            return (input[0..i].parse::<u32>().unwrap(), input[i..].trim_start());
         }
     }
     (
@@ -17,7 +15,6 @@ pub fn get_number(input: &str) -> (u32, &str) {
     )
 }
 
-#[aoc_generator(day1)]
 pub fn input_generator(input: &str) -> (Vec<u32>, Vec<u32>) {
     let mut v = Vec::with_capacity(1000);
     let mut v2 = Vec::with_capacity(1000);
@@ -30,21 +27,20 @@ pub fn input_generator(input: &str) -> (Vec<u32>, Vec<u32>) {
         } else {
             (num, inp) = get_number(inp);
             v.push(num);
-            //println!("{}", num);
+
             (num, inp) = get_number(inp);
-            //println!("{}", num);
+
             v2.push(num);
-            //println!();
         }
     }
 }
 
 #[aoc(day1, part1)]
-pub fn solve_part1(input: &(Vec<u32>, Vec<u32>)) -> u32 {
-    let (mut left, mut right) = input.clone();
+pub fn part1(input: &str) -> u32 {
+    let (mut left, mut right) = input_generator(input);
     left.sort();
     right.sort();
-    let mut pairs = HashSet::new();
+    let mut pairs = HashSet::with_capacity(1000);
     left.iter().zip(right.iter()).fold(0, |sum, (l, r)| {
         sum + {
             if pairs.contains(&(l, r)) || l == r {
@@ -106,8 +102,8 @@ pub fn bin_search_count(arr: &[u32], value: u32) -> u32 {
 }
 
 #[aoc(day1, part2)]
-pub fn solve_part2(input: &(Vec<u32>, Vec<u32>)) -> u32 {
-    let (left, mut right) = (input.0.clone(), input.1.clone());
+pub fn part2(input: &str) -> u32 {
+    let (left, mut right) = input_generator(input);
     right.sort();
     let mut prev_scores = HashMap::with_capacity(1000);
     let res = left.iter().fold(0, |similarity_score, l| {
