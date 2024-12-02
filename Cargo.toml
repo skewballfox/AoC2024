@@ -11,3 +11,4 @@ edition = "2021"
 [dependencies]
 aoc-runner = "0.3.0"
 aoc-runner-derive = "0.3.0"
+voracious_radix_sort = "=1.2.0"
