@@ -98,6 +98,7 @@ impl StateTracker {
             self.data[1] - self.data[0],
             self.data[2] - self.data[1],
             fourth - self.data[2],
+            fourth - self.data[1],
         );
 
         let mut replace_idx = 4;
@@ -112,12 +113,6 @@ impl StateTracker {
                     } else {
                         replace_idx = 0;
                     }
-                } else if index == 2 {
-                    if SAFE_RANGE.contains(&(fourth - self.data[1])) {
-                        replace_idx = 2;
-                    } else {
-                        replace_idx = 3;
-                    }
                 } else {
                     replace_idx = index;
                 }
@@ -127,6 +122,7 @@ impl StateTracker {
                 self.data[0] - self.data[1],
                 self.data[1] - self.data[2],
                 self.data[2] - fourth,
+                self.data[1] - fourth,
             );
 
             if decreasing {
@@ -138,12 +134,6 @@ impl StateTracker {
                             replace_idx = 1;
                         } else {
                             replace_idx = 0;
-                        }
-                    } else if index == 2 {
-                        if SAFE_RANGE.contains(&(self.data[1] - fourth)) {
-                            replace_idx = 2;
-                        } else {
-                            replace_idx = 3;
                         }
                     } else {
                         replace_idx = index;
@@ -177,16 +167,24 @@ impl StateTracker {
 
         (true, start)
     }
-    fn match_diffs(diffs1: u32, diffs2: u32, diffs3: u32) -> (bool, bool, usize) {
+    fn match_diffs(
+        diffs1: u32,
+        diffs2: u32,
+        diffs3: u32,
+        right_tie_breaker: u32,
+    ) -> (bool, bool, usize) {
         match (
             SAFE_RANGE.contains(&diffs1),
             SAFE_RANGE.contains(&diffs2),
             SAFE_RANGE.contains(&diffs3),
+            SAFE_RANGE.contains(&right_tie_breaker),
         ) {
-            (true, true, true) => (true, false, 0),
-            (true, true, false) => (true, true, 2),
-            (false, true, true) => (true, true, 0),
-            (true, false, true) => (true, true, 1),
+            (true, true, true, _) => (true, false, 0),
+            (true, true, false, _) => (true, true, 3),
+            (false, true, true, _) => (true, true, 0),
+            (true, false, true, _) => (true, true, 1),
+
+            (true, false, false, true) => (true, true, 2),
             _ => (false, false, 0),
         }
     }
