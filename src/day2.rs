@@ -1,7 +1,6 @@
-use std::process::exit;
-
 use aoc_runner_derive::aoc;
 const SAFE_RANGE: std::ops::Range<u32> = 1..4;
+const INPUT_LEN: usize = 1000;
 #[repr(usize)]
 #[derive(Default, Clone, Copy)]
 enum PositionIndex {
@@ -30,8 +29,7 @@ pub struct StateTracker {
 }
 fn parse_tens(input: &[u8], start: usize) -> u32 {
     unsafe {
-        ((*input.get_unchecked(start) as u32) - 48) * 10
-            + ((*input.get_unchecked(start + 1) as u32) - 48)
+        (*input.get_unchecked(start) as u32) * 10 + (*input.get_unchecked(start + 1) as u32) - 528
     }
 }
 
@@ -66,7 +64,8 @@ fn is_valid(first: u32, second: u32, increasing: bool) -> bool {
     SAFE_RANGE.contains(&diff)
 }
 
-fn grab_two(input: &[u8], mut start: usize) -> (u32, u32, usize) {
+#[inline(always)]
+fn grab_two(input: &[u8], start: usize) -> (u32, u32, usize) {
     let (first, start) = parse_digit(input, start);
     let (second, start) = parse_digit(input, start + 1);
     (first, second, start)
@@ -99,8 +98,6 @@ impl StateTracker {
             self.data[1] - self.data[0],
             self.data[2] - self.data[1],
             fourth - self.data[2],
-            fourth - self.data[1],
-            self.data[2] - self.data[0],
         );
 
         let mut replace_idx = 4;
@@ -109,22 +106,48 @@ impl StateTracker {
             self.increasing = true;
             if replace_level {
                 self.free_level = false;
-                replace_idx = index;
+                if index == 0 {
+                    if SAFE_RANGE.contains(&(self.data[2] - self.data[0])) {
+                        replace_idx = 1;
+                    } else {
+                        replace_idx = 0;
+                    }
+                } else if index == 2 {
+                    if SAFE_RANGE.contains(&(fourth - self.data[1])) {
+                        replace_idx = 2;
+                    } else {
+                        replace_idx = 3;
+                    }
+                } else {
+                    replace_idx = index;
+                }
             }
         } else {
             let (decreasing, replace_level, index) = Self::match_diffs(
                 self.data[0] - self.data[1],
                 self.data[1] - self.data[2],
                 self.data[2] - fourth,
-                self.data[1] - fourth,
-                self.data[0] - self.data[2],
             );
 
             if decreasing {
                 self.increasing = false;
                 if replace_level {
                     self.free_level = false;
-                    replace_idx = index;
+                    if index == 0 {
+                        if SAFE_RANGE.contains(&(self.data[0] - self.data[2])) {
+                            replace_idx = 1;
+                        } else {
+                            replace_idx = 0;
+                        }
+                    } else if index == 2 {
+                        if SAFE_RANGE.contains(&(self.data[1] - fourth)) {
+                            replace_idx = 2;
+                        } else {
+                            replace_idx = 3;
+                        }
+                    } else {
+                        replace_idx = index;
+                    }
                 }
             } else {
                 return (false, start);
@@ -154,26 +177,16 @@ impl StateTracker {
 
         (true, start)
     }
-    fn match_diffs(
-        diffs1: u32,
-        diffs2: u32,
-        diffs3: u32,
-        right_tie_breaker: u32,
-        left_tie_breaker: u32,
-    ) -> (bool, bool, usize) {
+    fn match_diffs(diffs1: u32, diffs2: u32, diffs3: u32) -> (bool, bool, usize) {
         match (
             SAFE_RANGE.contains(&diffs1),
             SAFE_RANGE.contains(&diffs2),
             SAFE_RANGE.contains(&diffs3),
-            SAFE_RANGE.contains(&right_tie_breaker),
-            SAFE_RANGE.contains(&left_tie_breaker),
         ) {
-            (true, true, true, _, _) => (true, false, 0),
-            (true, true, false, true, _) => (true, true, 2),
-            (true, true, false, false, _) => (true, true, 4),
-            (false, true, true, _, true) => (true, true, 1),
-            (false, true, true, _, false) => (true, true, 0),
-            (true, false, true, _, _) => (true, true, 1),
+            (true, true, true) => (true, false, 0),
+            (true, true, false) => (true, true, 2),
+            (false, true, true) => (true, true, 0),
+            (true, false, true) => (true, true, 1),
             _ => (false, false, 0),
         }
     }
@@ -183,17 +196,18 @@ impl StateTracker {
 pub fn part1(input: &str) -> u32 {
     let input = input.as_bytes();
     let mut start = 0;
-    let mut old: u32 = 0;
-    let mut next = 0;
-    let mut increasing = false;
-    (0..1000).fold(0, |safe_levels, _| {
+    let mut old: u32;
+    let mut next: u32;
+    let mut increasing;
+    let mut safe_levels = 0;
+    'outer: for _ in 0..INPUT_LEN {
         (old, next, start) = grab_two(input, start);
-        increasing = if old < next { true } else { false };
+        increasing = old < next;
         let diff = if increasing { next - old } else { old - next };
 
         if !SAFE_RANGE.contains(&diff) {
             start = next_line(input, start);
-            return safe_levels;
+            continue;
         }
         old = next;
 
@@ -204,35 +218,38 @@ pub fn part1(input: &str) -> u32 {
                 old = next;
             } else {
                 start = next_line(input, start);
-                return safe_levels;
+                continue 'outer;
             }
         }
         if start < input.len() {
             start += 1;
         }
-        safe_levels + 1
-    })
+        safe_levels += 1
+    }
+    safe_levels
 }
+
 #[aoc(day2, part2)]
 pub fn part2(input: &str) -> u32 {
     let input = input.as_bytes();
     let mut start = 0;
     let mut state = StateTracker::default();
-    let mut next: u32 = 0;
+    let mut next: u32;
 
-    let mut valid = true;
-    (0..1000).fold(0, |safe_lines, i| {
+    let mut valid: bool;
+    let mut safe_levels = 0;
+    'outer: for _ in 0..INPUT_LEN {
         (valid, start) = state.grab_four(input, start);
         if !valid {
             start = next_line(input, start);
-            return safe_lines;
+            continue;
         }
 
         while start < input.len() && input[start] != b'\n' {
             (next, start) = parse_digit(input, start + 1);
             if !state.check_next(next) {
                 start = next_line(input, start);
-                return safe_lines;
+                continue 'outer;
             }
         }
 
@@ -240,6 +257,7 @@ pub fn part2(input: &str) -> u32 {
             start += 1;
         }
 
-        safe_lines + 1
-    })
+        safe_levels += 1
+    }
+    safe_levels
 }
