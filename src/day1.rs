@@ -62,7 +62,6 @@ pub fn part1(input: &str) -> u32 {
 pub fn part2(input: &str) -> u32 {
     let mut left = Vec::with_capacity(1000);
     let mut right_counter = HashMap::with_capacity(1000);
-    //let input = input.trim_start();
     let mut inp = input;
     let mut num = 0;
     (0..1000).for_each(|_i: i32| {
