@@ -180,35 +180,6 @@ impl StateTracker {
     }
 }
 
-#[aoc(day2, part1, original)]
-pub fn part1original(input: &str) -> u32 {
-    input.lines().into_iter().fold(0, |safe_levels, line| {
-        let mut spliter = line.split_whitespace();
-        let mut old = spliter.next().unwrap().parse::<u32>().unwrap();
-        let tmp = spliter.next().unwrap().parse::<u32>().unwrap();
-        let increasing = if old < tmp { true } else { false };
-        let diff = if increasing { tmp - old } else { old - tmp };
-        if !SAFE_RANGE.contains(&diff) {
-            return safe_levels;
-        }
-        old = tmp;
-        for num_str in spliter {
-            let current = num_str.parse::<u32>().unwrap();
-            let diff = if increasing {
-                current - old
-            } else {
-                old - current
-            };
-            if SAFE_RANGE.contains(&diff) {
-                old = current
-            } else {
-                return safe_levels;
-            }
-        }
-        safe_levels + 1
-    })
-}
-
 #[aoc(day2, part1)]
 pub fn part1(input: &[u8]) -> u32 {
     let mut start = 0;
