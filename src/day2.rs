@@ -2,7 +2,6 @@ use std::process::exit;
 
 use aoc_runner_derive::aoc;
 const SAFE_RANGE: std::ops::Range<u32> = 1..4;
-const INV_RANGE: std::ops::Range<u32> = (u32::MAX - 3)..u32::MAX;
 #[repr(usize)]
 #[derive(Default, Clone, Copy)]
 enum PositionIndex {
@@ -181,7 +180,8 @@ impl StateTracker {
 }
 
 #[aoc(day2, part1)]
-pub fn part1(input: &[u8]) -> u32 {
+pub fn part1(input: &str) -> u32 {
+    let input = input.as_bytes();
     let mut start = 0;
     let mut old: u32 = 0;
     let mut next = 0;
@@ -214,7 +214,8 @@ pub fn part1(input: &[u8]) -> u32 {
     })
 }
 #[aoc(day2, part2)]
-pub fn part2(input: &[u8]) -> u32 {
+pub fn part2(input: &str) -> u32 {
+    let input = input.as_bytes();
     let mut start = 0;
     let mut state = StateTracker::default();
     let mut next: u32 = 0;
