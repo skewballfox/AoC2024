@@ -1,4 +1,8 @@
 use aoc_runner_derive::aoc;
+// use std::arch::x86_64::{
+//     __m256i, __mmask32, _mm256_cmpeq_epu8_mask, _mm256_mask_cmpeq_epu8_mask, _mm256_movemask_epi8,
+//     _mm256_set1_epi8,
+// };
 use std::ops::Range;
 
 const MUL_BYTES: [u8; 3] = [b'u', b'l', b'('];
@@ -19,7 +23,7 @@ enum TogglableParserState {
     Disabled,
 }
 
-fn get_muls(input: &[u8]) -> Vec<(u32, u32)> {
+fn get_muls(input: &[u8]) -> Vec<u32> {
     let mut muls = Vec::with_capacity(1000);
     let mut start = 0;
     let mut state = ParserState::Seeking;
@@ -68,7 +72,7 @@ fn get_muls(input: &[u8]) -> Vec<(u32, u32)> {
                     match input[offset] {
                         b')' => {
                             second = get_digit(&input[start..offset]);
-                            muls.push((first, second));
+                            muls.push(first * second);
                             start = offset + 1;
                             state = ParserState::Seeking;
                             continue 'outer;
@@ -89,7 +93,7 @@ fn get_muls(input: &[u8]) -> Vec<(u32, u32)> {
     muls
 }
 
-fn get_muls_toggle(input: &[u8]) -> Vec<(u32, u32)> {
+fn get_muls_toggle(input: &[u8]) -> Vec<u32> {
     let mut muls = Vec::with_capacity(1000);
     let mut start = 0;
     let mut state = TogglableParserState::Seeking;
@@ -145,7 +149,7 @@ fn get_muls_toggle(input: &[u8]) -> Vec<(u32, u32)> {
                     match input[offset] {
                         b')' => {
                             second = get_digit(&input[start..offset]);
-                            muls.push((first, second));
+                            muls.push(first * second);
                             start = offset + 1;
                             state = TogglableParserState::Seeking;
                             continue 'outer;
@@ -181,8 +185,8 @@ pub fn part1(input: &str) -> u32 {
     let input = input.as_bytes();
     let muls = get_muls(input);
     let mut sum = 0;
-    for (a, b) in muls {
-        sum += a * b;
+    for prod in muls {
+        sum += prod;
     }
     sum
 }
@@ -192,8 +196,8 @@ pub fn part2(input: &str) -> u32 {
     let input = input.as_bytes();
     let muls = get_muls_toggle(input);
     let mut sum = 0;
-    for (a, b) in muls {
-        sum += a * b;
+    for prod in muls {
+        sum += prod;
     }
     sum
 }

@@ -3,9 +3,8 @@ name = "aoc2024"
 version = "0.1.0"
 edition = "2021"
 
-# [lib]
-# name = "AoC2018"
-# path = "src/lib.rs"
+[dev-dependencies]
+criterion = { version = "2.7.2", package = "codspeed-criterion-compat" }
 
 
 [dependencies]
